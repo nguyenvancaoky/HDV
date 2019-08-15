@@ -1,0 +1,23 @@
+{
+	"contentrating" : "Everyone",
+	"description" : "崩坏3夏日活动奇异漂流第二期CG\nBGM：加藤達也 - 雪下の誓い",
+	"file" : "夏活希儿.mp4",
+	"general" : 
+	{
+		"properties" : 
+		{
+			"schemecolor" : 
+			{
+				"order" : 0,
+				"text" : "ui_browse_properties_scheme_color",
+				"type" : "color",
+				"value" : "0.1803921568627451 0.4 0.7490196078431373"
+			}
+		}
+	},
+	"preview" : "preview.jpg",
+	"tags" : [ "Anime" ],
+	"title" : "[1080P+♪]夏雪铃兰-希儿[崩坏3]",
+	"type" : "video",
+	"visibility" : "public"
+}
