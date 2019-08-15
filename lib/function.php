@@ -151,6 +151,33 @@ function post_blog($data){
   curl_close ($get_download);
   unset($get_download);
 }
+function s_link($link,$title){
+	$token = 'b8bd772eef346f9e7e898728efbaac6853e44e5c';
+  $data = '{
+    "long_url": "'.$link.'",
+    "title": "'.$title.'"
+  }';
+  $url = 'https://api-ssl.bitly.com/v4/bitlinks';
+  $get_download = curl_init();
+  curl_setopt($get_download, CURLOPT_URL, $url );
+  curl_setopt($get_download, CURLOPT_TIMEOUT, 40000);
+  $headers = [
+    "Authorization: Bearer ".$token,
+    "Content-Type: application/json"
+  ];
+  curl_setopt($get_download, CURLOPT_HTTPHEADER, $headers);
+  curl_setopt($get_download, CURLOPT_VERBOSE,1);
+  curl_setopt($get_download, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.0.3705; .NET CLR 1.1.4322; Media Center PC 4.0)');
+  curl_setopt($get_download, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($get_download, CURLOPT_POST,1);
+  curl_setopt($get_download, CURLOPT_FOLLOWLOCATION, 20);
+  curl_setopt($get_download, CURLOPT_POSTFIELDS, $data);
+  ob_start();
+  return curl_exec ($get_download);
+  ob_end_clean();
+  curl_close ($get_download);
+  unset($get_download);
+}
 function update_blog($data,$id){
   $token = json_encode($_SESSION['access_token']);
 	$token = json_decode($token,true);
@@ -361,6 +388,9 @@ function Get_info($id){
 
   );
 
+  $short_link = json_decode(s_link($info['download'],$info['title']),1);
+  $info['download'] = $short_link['link'].'?id='.$id;
+
   $labels = [$info['type'],$info['rating'],$info['resolution'],$info['category']];
   foreach ($info['genre'] as $value) {
     $labels[] = $value;
@@ -455,6 +485,7 @@ function Get_info($id){
       <b>Genre:</b> '.$html_lb.'<br />
       <b>Resolution:</b> <a href="/search/label/'.$info['resolution'].'">'.$info['resolution'].'</a><br />
       <b>Category:</b> <a href="/search/label/'.$info['category'].'">'.$info['category'].'</a><br />
+      <b>Steam Url:</b> <a href="https://steamcommunity.com/sharedfiles/filedetails/?id='.$id.'">'.$id.'</a><br />
       <b>File Size:</b> '.$info['file_size'].'
     </div>
   </div>
