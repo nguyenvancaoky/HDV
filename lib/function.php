@@ -14,6 +14,9 @@ function write_progress( $ch, $original_size, $current_size, $os_up, $cs_up ) {
         //Compute percent already downloaded.
         $transfer_percentage = $current_size / $original_size;
         //Compute estimated transfer time.
+        if ($transfer_percentage == 0) {
+          $transfer_percentage = 1;
+        }
         $estimated_tranfer_time = $transfer_time / $transfer_percentage;
         //Compute estimated time remaining.
         $estimated_time_remaining = $estimated_tranfer_time - $transfer_time;
@@ -130,7 +133,7 @@ function post_blog($data){
 	$token = json_decode($token,true);
 	$token = $token['access_token'];
 
-  $url = 'https://www.googleapis.com/blogger/v3/blogs/7826812665494882480/posts?fetchBody=true&fetchImages=true&prettyPrint=true';
+  $url = 'https://www.googleapis.com/blogger/v3/blogs/6107832880316349156/posts';
   $get_download = curl_init();
   curl_setopt($get_download, CURLOPT_URL, $url );
   curl_setopt($get_download, CURLOPT_TIMEOUT, 40000);
@@ -183,7 +186,7 @@ function update_blog($data,$id){
 	$token = json_decode($token,true);
 	$token = $token['access_token'];
 
-  $url = 'https://www.googleapis.com/blogger/v3/blogs/7826812665494882480/posts/'.$id.'?publish=true';
+  $url = 'https://www.googleapis.com/blogger/v3/blogs/6107832880316349156/posts/'.$id.'?publish=true';
 
   $curl = curl_init();
 
@@ -225,7 +228,7 @@ function Check_post($id)
 }
 
 function search_id($id){
-    $url = 'https://www.googleapis.com/blogger/v3/blogs/7826812665494882480/posts/search?q='.$id.'&fetchBodies=true&orderBy=published';
+    $url = 'https://www.googleapis.com/blogger/v3/blogs/6107832880316349156/posts/search?q='.$id.'&fetchBodies=true&orderBy=published';
     $token = json_encode($_SESSION['access_token']);
     $token = json_decode($token,true);
     $token = $token['access_token'];
@@ -373,9 +376,11 @@ function Get_info($id){
   </script>';
   flush_all();
 
+  $title = str_replace("'","&apos;",$title);
+
   $info = array(
     'title' => $title,
-    'image_default' => $image_url,
+    'image_default' => $image_url.'?imw=640&impolicy=Letterbox',
     'image_auto' => null,
     'type' => $type,
     'rating' => $rating,
@@ -388,66 +393,84 @@ function Get_info($id){
 
   );
 
-  $short_link = json_decode(s_link($info['download'],$info['title']),1);
-  $info['download'] = $short_link['link'].'?id='.$id;
+
+
 
   $labels = [$info['type'],$info['rating'],$info['resolution'],$info['category']];
   foreach ($info['genre'] as $value) {
     $labels[] = $value;
   }
 
+
+
   if (!$check) {
-  $file = fopen('./zip/'.$id.'.zip', "w+");
-  $ch = curl_init();
-  curl_setopt( $ch, CURLOPT_URL, $info['download'] );
-  curl_setopt( $ch, CURLOPT_FILE, $file );
-  curl_setopt( $ch, CURLOPT_NOPROGRESS, false );
-  curl_setopt( $ch, CURLOPT_PROGRESSFUNCTION, 'write_progress' );
-  $data_dl = curl_exec( $ch );
+    if (strpos($info['type'], 'Video') !== false) {
+      $file = fopen('./zip/'.$id.'.zip', "w+");
+      $ch = curl_init();
+      curl_setopt( $ch, CURLOPT_URL, $info['download'] );
+      curl_setopt( $ch, CURLOPT_FILE, $file );
+      curl_setopt( $ch, CURLOPT_NOPROGRESS, false );
+      curl_setopt( $ch, CURLOPT_PROGRESSFUNCTION, 'write_progress' );
+      $data_dl = curl_exec( $ch );
+
+      echo '<script language="javascript">
+      document.getElementById("size").innerHTML="Đang giải nén....";
+      </script>';
+      flush_all();
+
+      $zip = new ZipArchive;
+      $res = $zip->open('./zip/'.$id.'.zip');
+      if ($res === TRUE) {
+        $zip->extractTo('./unzip');
+        $zip->close();
+      } else {
+        echo 'Lỗi giải nén....';
+      }
+      echo '<script language="javascript">
+      document.getElementById("size").innerHTML="Đang tạo file Gif....";
+      </script>';
+      flush_all();
+
+      $directory = str_replace('\lib','',__DIR__)."/unzip/".$id."/";
+      $file = glob($directory . "*.mp4");
+      // $mp4_to_gif = shell_exec('ffmpeg -i "'.$file[0].'" -ss 10 -t 3.5 -vf fps=10,scale=640:-1 -r 10 "'.realpath($directory).'\out.gif" -hide_banner');
+      // $mp4_to_gif = shell_exec('ffmpeg -ss 2.6 -t 3.5 -i "'.$file[0].'" -vf fps=10,scale=720:-1:flags=lanczos,palettegen "'.realpath($directory).'\palette.png"');
+      // $mp4_to_gif = shell_exec('ffmpeg -ss 2.6 -t 3.5 -i "'.$file[0].'" -i palette.png -filter_complex “fps=10,scale=720:-1:flags=lanczos[x];[x][1:v]paletteuse” "'.realpath($directory).'\out.gif"');
+
+      $mp4_to_gif = exec('ffmpeg -y -ss 2 -t 3.5 -i "'.$file[0].'" -vf fps=10,scale=640:-1:flags=lanczos,palettegen "'.realpath($directory).'\palette.png"');
+      sleep(2);
+      $mp4_to_gif = exec('ffmpeg -ss 2 -t 3.5 -i "'.$file[0].'" -i "'.realpath($directory).'\palette.png" -filter_complex "fps=10,scale=640:-1:flags=lanczos[x];[x][1:v]paletteuse" "'.realpath($directory).'\out.gif"');
+
+
+      echo '<script language="javascript">
+      document.getElementById("size").innerHTML="Tải lên Imgur....";
+      </script>';
+      flush_all();
+      $imgur = imgur($directory.'/out.gif',$info['title']);
+      // echo $imgur;
+      $imgur_data = json_decode($imgur,1);
+      echo $imgur_data['data']['link'];
+      $info['image_auto'] = $imgur_data['data']['link'];
+    }
+
 
   echo '<script language="javascript">
-  document.getElementById("size").innerHTML="Đang giải nén....";
+  document.getElementById("size").innerHTML="Rút gọn Link...";
   </script>';
   flush_all();
+  // $short_link = json_decode(s_link($info['download'],$info['title']),1);
+  // $info['download'] = $short_link['link'].'?id='.$id;
+  $info['download'] = '/p/redirect.html?t='.base64_encode($info['download']).'&id='.$id;
 
-  $zip = new ZipArchive;
-  $res = $zip->open('./zip/'.$id.'.zip');
-  if ($res === TRUE) {
-    $zip->extractTo('./unzip');
-    $zip->close();
+  if (strpos($info['type'], 'Video') !== false) {
+  $mp4 = '<video autoplay="" loop="" muted="" playsinline="">
+            <source src="'.$imgur_data['data']['mp4'].'" type="video/mp4">
+          </source></video>';
   } else {
-    echo 'Lỗi giải nén....';
+  $mp4 = '<img style="max-width: 640px;" src="'.$info['image_default'].'" />';
   }
 
-  echo '<script language="javascript">
-  document.getElementById("size").innerHTML="Đang tạo file Gif....";
-  </script>';
-  flush_all();
 
-  $directory = str_replace('\lib','',__DIR__)."/unzip/".$id."/";
-  $file = glob($directory . "*.mp4");
-  // $mp4_to_gif = shell_exec('ffmpeg -i "'.$file[0].'" -ss 10 -t 3.5 -vf fps=10,scale=640:-1 -r 10 "'.realpath($directory).'\out.gif" -hide_banner');
-  // $mp4_to_gif = shell_exec('ffmpeg -ss 2.6 -t 3.5 -i "'.$file[0].'" -vf fps=10,scale=720:-1:flags=lanczos,palettegen "'.realpath($directory).'\palette.png"');
-  // $mp4_to_gif = shell_exec('ffmpeg -ss 2.6 -t 3.5 -i "'.$file[0].'" -i palette.png -filter_complex “fps=10,scale=720:-1:flags=lanczos[x];[x][1:v]paletteuse” "'.realpath($directory).'\out.gif"');
-
-  $mp4_to_gif = exec('ffmpeg -y -ss 4 -t 3.5 -i "'.$file[0].'" -vf fps=10,scale=640:-1:flags=lanczos,palettegen "'.realpath($directory).'\palette.png"');
-  sleep(2);
-  $mp4_to_gif = exec('ffmpeg -ss 4 -t 3.5 -i "'.$file[0].'" -i "'.realpath($directory).'\palette.png" -filter_complex "fps=10,scale=640:-1:flags=lanczos[x];[x][1:v]paletteuse" "'.realpath($directory).'\out.gif"');
-
-
-  echo '<script language="javascript">
-  document.getElementById("size").innerHTML="Tải lên Imgur....";
-  </script>';
-  flush_all();
-  $imgur = imgur($directory.'/out.gif',$info['title']);
-  // echo $imgur;
-  $imgur_data = json_decode($imgur,1);
-  echo $imgur_data['data']['link'];
-  $info['image_auto'] = $imgur_data['data']['link'];
-
-  $mp4 = '<video loop muted autoplay playsinline>
-  <source src="'.$imgur_data['data']['mp4'].'" type="video/mp4">
-  </video>';
 
   $html_lb = '';
   foreach ($info['genre'] as $key_lb => $value_lb) {
@@ -468,10 +491,8 @@ function Get_info($id){
 
   $content = '
   <center>
-    <video autoplay="" loop="" muted="" playsinline="">
-      <source src="'.$imgur_data['data']['mp4'].'" type="video/mp4">
-      </source></video>
-  <iframe width="640" height="340" src="https://www.youtube.com/embed/A9ESjWHIMuU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      '.$mp4.'
+  <iframe width="640" height="340" src="https://www.youtube.com/embed/Sy0p0YPL98E" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
   </center>
   <div class="card">
     <div class="card-header" id="headingOne">
@@ -509,7 +530,7 @@ function Get_info($id){
       </div>
       <div class=" card-body collapse active" id="download-content">
         <center>
-          <a href="'.$info['download'].'"><button class="glow-on-hover" type="button">Download This Wallpaper</button></a>
+          <a href="'.$info['download'].'" target="_blank"><button class="glow-on-hover" type="button">Download This Wallpaper</button></a>
         </center>
       </div>
       <div class=" card-body collapse" id="we-content">
@@ -535,23 +556,40 @@ function Get_info($id){
   </div>
   ';
 
-  $data_post = array(
-    'title' => $id,
-    'titleLink' => $imgur_data['data']['mp4'],
-    'content' => $content,
-    'labels' => $labels
-  );
+  if (strpos($info['type'], 'Video') !== false) {
+    $data_post = array(
+      'title' => $id,
+      'titleLink' => $imgur_data['data']['mp4'],
+      'content' => $content,
+      'labels' => $labels
+    );
+  } else {
+    $data_post = array(
+      'title' => $id,
+      'titleLink' => $info['image_default'],
+      'content' => $content,
+      'labels' => $labels
+    );
+  }
+
+
 
   echo '<script language="javascript">
   document.getElementById("size").innerHTML="Post to blogger ....";
   </script>';
   flush_all();
-  $result = json_decode(post_blog(json_encode($data_post)),1);
+
+  $result_data = post_blog(json_encode($data_post));
+  $result = json_decode($result_data,1);
 
   $data_update = "{\"title\":\"title\",\"titleLink\":\"https:\\/\\/ani-vn.tech\",\"content\":\"content\",\"labels\":\"labels\"}";
   $data_update = json_decode($data_update,1);
   $data_update['title'] = $info['title'];
+  if (strpos($info['type'], 'Video') !== false) {
   $data_update['titleLink'] = $imgur_data['data']['mp4'];
+} else {
+  $data_update['titleLink'] = $info['image_default'];
+}
   $data_update['content'] = $content;
   $data_update['labels'] = $labels;
 
@@ -559,7 +597,7 @@ function Get_info($id){
   document.getElementById("size").innerHTML="Update to blogger....";
   </script>';
   flush_all();
-  $result_update = update_blog(json_encode($data_update),$result['id']);
+  $result_update = update_blog(json_encode($data_update),$result["id"]);
 
   $result_update = json_decode($result_update,1);
 
@@ -575,12 +613,12 @@ function Get_info($id){
 }
 
 
-
+  if (strpos($info['type'], 'Video') !== false) {
   echo '<script language="javascript">
   document.getElementById("img").innerHTML=ShowEnlargedImagePreview("unzip/'.$id.'/out.gif");
   </script>';
   flush_all();
-
+  }
 
 
   return true;
