@@ -182,6 +182,7 @@ function s_link($link,$title){
   unset($get_download);
 }
 function update_blog($data,$id){
+  sleep(1);
   $token = json_encode($_SESSION['access_token']);
 	$token = json_decode($token,true);
 	$token = $token['access_token'];
@@ -354,8 +355,10 @@ function Get_info($id){
 
   $check = Check_post($id);
 
+
   if (!$check) {
     $url = null;
+    $sleept = 0;
     while (!$url) {
       $send_get = grab_url('http://steamworkshop.download/download/view/'.$id);
       $get_download = get_download('item='.$id.'&app=431960');
@@ -363,13 +366,18 @@ function Get_info($id){
       $url = $html->find('a',0);
       $url = $url->href;
       if (!$url) {
-        sleep(3);
+        $sleept = $sleept+4;
+        if ($sleept > 120) {
+          $url = 400;
+        }
+        sleep(4);
       }
     }
   } else {
     $url = $check['titleLink'];
   }
 
+if ($url != 400) {
 
   echo '<script language="javascript">
   document.getElementById("download_link").innerHTML="'.$url.'";
@@ -580,6 +588,7 @@ function Get_info($id){
   flush_all();
 
   $result_data = post_blog(json_encode($data_post));
+  echo $result_data;
   $result = json_decode($result_data,1);
 
   $data_update = "{\"title\":\"title\",\"titleLink\":\"https:\\/\\/ani-vn.tech\",\"content\":\"content\",\"labels\":\"labels\"}";
@@ -619,7 +628,9 @@ function Get_info($id){
   </script>';
   flush_all();
   }
-
+} else {
+  echo "Lỗi steam";
+}
 
   return true;
 }
