@@ -299,6 +299,7 @@ function get_absolute_path($path) {
 }
 
 function Get_info($id){
+
   echo '<script language="javascript">
   document.getElementById("title").innerHTML="Loading...";
   document.getElementById("type").innerHTML="Loading...";
@@ -313,7 +314,7 @@ function Get_info($id){
   }
   </script>';
   flush_all();
-
+  sleep(2);
   $data = grab_url('https://steamcommunity.com/sharedfiles/filedetails/?id='.$id);
   $data = str_get_html($data);
   $col_right = $data->find('div.col_right',0);
@@ -353,7 +354,7 @@ function Get_info($id){
 
   flush_all();
 
-  $check = Check_post($id);
+  $check = 0;
 
 
   if (!$check) {
@@ -367,7 +368,7 @@ function Get_info($id){
       $url = $url->href;
       if (!$url) {
         $sleept = $sleept+4;
-        if ($sleept > 120) {
+        if ($sleept > 30) {
           $url = 400;
         }
         sleep(4);
@@ -413,19 +414,25 @@ if ($url != 400) {
 
   if (!$check) {
     if (strpos($info['type'], 'Video') !== false) {
-      $file = fopen('./zip/'.$id.'.zip', "w+");
-      $ch = curl_init();
-      curl_setopt( $ch, CURLOPT_URL, $info['download'] );
-      curl_setopt( $ch, CURLOPT_FILE, $file );
-      curl_setopt( $ch, CURLOPT_NOPROGRESS, false );
-      curl_setopt( $ch, CURLOPT_PROGRESSFUNCTION, 'write_progress' );
-      $data_dl = curl_exec( $ch );
 
-      echo '<script language="javascript">
-      document.getElementById("size").innerHTML="Đang giải nén....";
-      </script>';
-      flush_all();
+      if (!(file_exists('./zip/'.$id.'.zip'))) {
+        $file = fopen('./zip/'.$id.'.zip', "w+");
+        $ch = curl_init();
+        curl_setopt( $ch, CURLOPT_URL, $info['download'] );
+        curl_setopt( $ch, CURLOPT_FILE, $file );
+        curl_setopt( $ch, CURLOPT_NOPROGRESS, false );
+        curl_setopt( $ch, CURLOPT_PROGRESSFUNCTION, 'write_progress' );
+        $data_dl = curl_exec( $ch );
 
+        echo '<script language="javascript">
+        document.getElementById("size").innerHTML="Đang giải nén....";
+        </script>';
+        flush_all();
+      }
+
+      $directory = str_replace('\lib','',__DIR__)."/unzip/".$id."/";
+
+      if (!(file_exists('./unzip/'.$id.'/out.gif'))) {
       $zip = new ZipArchive;
       $res = $zip->open('./zip/'.$id.'.zip');
       if ($res === TRUE) {
@@ -438,17 +445,11 @@ if ($url != 400) {
       document.getElementById("size").innerHTML="Đang tạo file Gif....";
       </script>';
       flush_all();
-
-      $directory = str_replace('\lib','',__DIR__)."/unzip/".$id."/";
       $file = glob($directory . "*.mp4");
-      // $mp4_to_gif = shell_exec('ffmpeg -i "'.$file[0].'" -ss 10 -t 3.5 -vf fps=10,scale=640:-1 -r 10 "'.realpath($directory).'\out.gif" -hide_banner');
-      // $mp4_to_gif = shell_exec('ffmpeg -ss 2.6 -t 3.5 -i "'.$file[0].'" -vf fps=10,scale=720:-1:flags=lanczos,palettegen "'.realpath($directory).'\palette.png"');
-      // $mp4_to_gif = shell_exec('ffmpeg -ss 2.6 -t 3.5 -i "'.$file[0].'" -i palette.png -filter_complex “fps=10,scale=720:-1:flags=lanczos[x];[x][1:v]paletteuse” "'.realpath($directory).'\out.gif"');
-
       $mp4_to_gif = exec('ffmpeg -y -ss 2 -t 3.5 -i "'.$file[0].'" -vf fps=10,scale=640:-1:flags=lanczos,palettegen "'.realpath($directory).'\palette.png"');
       sleep(2);
       $mp4_to_gif = exec('ffmpeg -ss 2 -t 3.5 -i "'.$file[0].'" -i "'.realpath($directory).'\palette.png" -filter_complex "fps=10,scale=640:-1:flags=lanczos[x];[x][1:v]paletteuse" "'.realpath($directory).'\out.gif"');
-
+      }
 
       echo '<script language="javascript">
       document.getElementById("size").innerHTML="Tải lên Imgur....";
@@ -460,12 +461,6 @@ if ($url != 400) {
       echo $imgur_data['data']['link'];
       $info['image_auto'] = $imgur_data['data']['link'];
     }
-
-
-  echo '<script language="javascript">
-  document.getElementById("size").innerHTML="Rút gọn Link...";
-  </script>';
-  flush_all();
   // $short_link = json_decode(s_link($info['download'],$info['title']),1);
   // $info['download'] = $short_link['link'].'?id='.$id;
   $info['download'] = '/p/redirect.html?t='.base64_encode($info['download']).'&id='.$id;
@@ -498,10 +493,18 @@ if ($url != 400) {
   }
 
   $content = '
+  <h2 style="text-align: center;">
+  <span style="font-size: large;"><span style="color: #cccccc;">Download "'.$info['title'].'" Wallpaper Engine Free and get all of the wallpaper engine best wallpapers + the latest version of wallpaper engine software non-steam required. </span></span></h2>
   <center>
       '.$mp4.'
   <iframe width="640" height="340" src="https://www.youtube.com/embed/Sy0p0YPL98E" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
   </center>
+  <center>
+  ['.$info['title'].'] is one of <a href="https://wallpaperhdvs.blogspot.com/download" target="_blank">wallpaper engine</a> <a href="https://workshop.wallpaperhdv.net/" target="_blank">best wallpapers</a> available on steam wallpaper engine Workshop to make your computer desktop go live giving you an outstanding experience while using PC.
+  You can easily use it once you download it from our site (absolutely free), This <a href="https://wallpaperhdvs.blogspot.com/download" target="_blank">wallpaper engine free</a> wallpaper can be the best alternative for your windows desktop images.
+  Browse our site so you can download thousands of <a href="https://wallpaperhdvs.blogspot.com/download" target="_blank">wallpaper engine</a> <a href="https://workshop.wallpaperhdv.net/" target="_blank">free wallpapers</a> ready to be on your desktop.
+  If you are new to wallpaper engine, here are a couple questions answered here.
+  &nbsp;</center>
   <div class="card">
     <div class="card-header" id="headingOne">
       <h5 class="mb-0">
