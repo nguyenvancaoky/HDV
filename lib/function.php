@@ -93,7 +93,7 @@ function get_download($data){
 }
 function imgur($file,$title){
         $url = 'https://api.imgur.com/3/upload';
-        $token = 'f5aeeabf0672a2526e2ba5c3197b012183c53dcc';
+        $token = 'a77fecbd4692c8e2c59d7b19bc792554d03737dd';
 
         $handle = fopen($file, 'r');
         $data = fread($handle, filesize($file));
@@ -133,7 +133,7 @@ function post_blog($data){
 	$token = json_decode($token,true);
 	$token = $token['access_token'];
 
-  $url = 'https://www.googleapis.com/blogger/v3/blogs/6107832880316349156/posts';
+  $url = 'https://www.googleapis.com/blogger/v3/blogs/2283371075141066583/posts';
   $get_download = curl_init();
   curl_setopt($get_download, CURLOPT_URL, $url );
   curl_setopt($get_download, CURLOPT_TIMEOUT, 40000);
@@ -187,7 +187,7 @@ function update_blog($data,$id){
 	$token = json_decode($token,true);
 	$token = $token['access_token'];
 
-  $url = 'https://www.googleapis.com/blogger/v3/blogs/6107832880316349156/posts/'.$id.'?publish=true';
+  $url = 'https://www.googleapis.com/blogger/v3/blogs/2283371075141066583/posts/'.$id.'?publish=true';
 
   $curl = curl_init();
 
@@ -229,7 +229,7 @@ function Check_post($id)
 }
 
 function search_id($id){
-    $url = 'https://www.googleapis.com/blogger/v3/blogs/6107832880316349156/posts/search?q='.$id.'&fetchBodies=true&orderBy=published';
+    $url = 'https://www.googleapis.com/blogger/v3/blogs/2283371075141066583/posts/search?q='.$id.'&fetchBodies=true&orderBy=published';
     $token = json_encode($_SESSION['access_token']);
     $token = json_decode($token,true);
     $token = $token['access_token'];
@@ -389,7 +389,7 @@ if ($url != 400) {
 
   $info = array(
     'title' => $title,
-    'image_default' => $image_url.'?imw=640&impolicy=Letterbox',
+    'image_default' => $image_url.'?imw=450&impolicy=Letterbox',
     'image_auto' => null,
     'type' => $type,
     'rating' => $rating,
@@ -405,7 +405,7 @@ if ($url != 400) {
 
 
 
-  $labels = [$info['type'],$info['rating'],$info['resolution'],$info['category']];
+  $labels = [$info['type'],$info['rating'],$info['category']];
   foreach ($info['genre'] as $value) {
     $labels[] = $value;
   }
@@ -463,12 +463,10 @@ if ($url != 400) {
     }
   // $short_link = json_decode(s_link($info['download'],$info['title']),1);
   // $info['download'] = $short_link['link'].'?id='.$id;
-  $info['download'] = '/p/redirect.html?t='.base64_encode($info['download']).'&id='.$id;
+  $info['download'] = '/p/download.html?t='.base64_encode($info['download']).'&id='.$id;
 
   if (strpos($info['type'], 'Video') !== false) {
-  $mp4 = '<video autoplay="" loop="" muted="" playsinline="">
-            <source src="'.$imgur_data['data']['mp4'].'" type="video/mp4">
-          </source></video>';
+  $mp4 = '<img style="max-width: 640px;" src="'.$imgur_data['data']['link'].'" />';
   } else {
   $mp4 = '<img style="max-width: 640px;" src="'.$info['image_default'].'" />';
   }
@@ -494,90 +492,105 @@ if ($url != 400) {
 
   $content = '
   <h2 style="text-align: center;">
-  <span style="font-size: large;"><span style="color: #cccccc;">Download "'.$info['title'].'" Wallpaper Engine Free and get all of the wallpaper engine best wallpapers + the latest version of wallpaper engine software non-steam required. </span></span></h2>
-  <center>
-      '.$mp4.'
-  <iframe width="640" height="340" src="https://www.youtube.com/embed/Sy0p0YPL98E" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-  </center>
-  <center>
-  ['.$info['title'].'] is one of <a href="https://wallpaperhdvs.blogspot.com/download" target="_blank">wallpaper engine</a> <a href="https://workshop.wallpaperhdv.net/" target="_blank">best wallpapers</a> available on steam wallpaper engine Workshop to make your computer desktop go live giving you an outstanding experience while using PC.
-  You can easily use it once you download it from our site (absolutely free), This <a href="https://wallpaperhdvs.blogspot.com/download" target="_blank">wallpaper engine free</a> wallpaper can be the best alternative for your windows desktop images.
-  Browse our site so you can download thousands of <a href="https://wallpaperhdvs.blogspot.com/download" target="_blank">wallpaper engine</a> <a href="https://workshop.wallpaperhdv.net/" target="_blank">free wallpapers</a> ready to be on your desktop.
-  If you are new to wallpaper engine, here are a couple questions answered here.
-  &nbsp;</center>
-  <div class="card">
-    <div class="card-header" id="headingOne">
-      <h5 class="mb-0">
-        <a href="#">DESCRIPTION</a></h5>
-    </div>
-    <div class=" card-body collapse show active" id="collapseOne">
-      <b>Title:</b> '.$info['title'].'<br />
-      <b>Type:</b> <a href="/search/label/'.$info['type'].'">'.$info['type'].'</a><br />
-      <b>Rating:</b> <a href="/search/label/'.$info['rating'].'">'.$info['rating'].'</a><br />
-      <b>Genre:</b> '.$html_lb.'<br />
-      <b>Resolution:</b> <a href="/search/label/'.$info['resolution'].'">'.$info['resolution'].'</a><br />
-      <b>Category:</b> <a href="/search/label/'.$info['category'].'">'.$info['category'].'</a><br />
-      <b>Steam Url:</b> <a href="https://steamcommunity.com/sharedfiles/filedetails/?id='.$id.'">'.$id.'</a><br />
-      <b>File Size:</b> '.$info['file_size'].'
-    </div>
+  <b><span style="font-size: large;">Download <i>'.$info['title'].'</i> Wallpaper Engine Free and get all of the wallpaper engine best wallpapers + the latest version of wallpaper engine software non-steam required.</span></b></h2>
+  <div>
+  <ul>
+  <li>[col]</li>
+  <ul>
+  <li>[<b><span style="color: #369fcf;">'.$info['title'].'</span></b>] is one of <a href="/" target="_blank">wallpaper engine best wallpapers</a> available on <a href="/p/wallpaper-engine-workshop.html" target="_blank">steam wallpaper engine Workshop</a> to make your computer desktop go live giving you an outstanding experience while using PC.</li>
+  <li>You can easily use it once you download it from our site (absolutely free), This <a href="/" target="_blank">wallpaper engine free wallpaper</a> can be the best alternative for your windows desktop images. Browse our site so you can download thousands of <b>wallpaper engine free wallpapers</b> ready to be on your desktop.</li>
+  </ul>
+  </ul>
+  <div class="separator" style="clear: both; text-align: center;">
+  '.$mp4.'
   </div>
-  <div class="col-sm-12">
-    <hr />
-    <ul class="nav nav-pills mb-3" id="pills-tab">
-      <li class="nav-item">
-        <button class="nav-link active" id="pills-download" onclick="dl()">Download</button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" id="pills-wallpaper_engine" onclick="wallpaper_engine()">How To Use This Wallpaper </button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" id="pills-faq" onclick="faq()">What is Wallpaper Engine?</button>
-      </li>
-    </ul>
-    <div class="card">
-      <div class="card-header" id="headingOne">
-        <h5 class="mb-0" id="card-title">
-          <a href="#">Download</a></h5>
-      </div>
-      <div class=" card-body collapse active" id="download-content">
-        <center>
-          <a href="'.$info['download'].'" target="_blank"><button class="glow-on-hover" type="button">Download This Wallpaper</button></a>
-        </center>
-      </div>
-      <div class=" card-body collapse" id="we-content">
-        <h5>
-          <b><br />
-            1. Download The Latest and Updated Version Of <a href="https://wallpaperhdvs.blogspot.com/download">Wallpaper Engine Software</a> Free<br />
-            2. Download this Wallpaper Engine theme.<br />
-            3. Extract &amp; copy the downloaded file to this destination:<br />
-            [Wallpaper Engine] &gt; Projects &gt; Default projects.<br />
-            4. Need help? Read this <a href="https://wallpaperhdvs.blogspot.com/faq">Here.</a>
-          </b>
-        </h5>
-      </div>
-      <div class=" card-body collapse" id="faq-content">
-        <h5>
-          <b><br />
-            Wallpaper Engine Software allows you to use amazing live wallpapers on your computer desktop. You can choose from our site wallpaper engine best wallpapers that you like and easily make your desktop go live using this amazing software.
-            Read: <a href="https://wallpaperhdvs.blogspot.com/download" target="_blank">What is Wallpaper Engine? The Complete Guide.</a>
-          </b>
-        </h5>
-      </div>
-    </div>
+  <br />
+  <br />
+  <ul>
+  <li>[tab]</li>
+  <ul>
+  <li>FAQ</li>
+  <ul>
+  <li>Frequently Asked Questions</li>
+  </ul>
+  <li>What is Wallpaper Engine?</li>
+  <ul>
+  <li>Wallpaper Engine Software allows you to use amazing live wallpapers on your computer desktop. You can choose from our site wallpaper engine best wallpapers that you like and easily make your desktop go live using this amazing software. Read: <a href="/p/what-is-wallpaper-engine.html" target="_blank">What is Wallpaper Engine? The Complete Guide.</a></li>
+  </ul>
+  <li>What Types of Wallpapers Supported?</li>
+  <ul>
+  <li>Several types of wallpaper engine wallpapers are supported and ready to use, Including 3D and 2D animations, websites, videos and even some applications.</li>
+  </ul>
+  <li>About Performance</li>
+  <ul>
+  <li>Wallpaper Engine was delicately built to deliver you an entertaining experience while using the minimum system resources as possible. Multiple options available inside the software to adjust the quality and performance to make Wallpaper Engine fully compatible with your computer capacities.</li>
+  </ul>
+  </ul>
+  </ul>
+  <br />
+  <br /></div>
+  <div class="separator" style="clear: both; text-align: center;">
+  <iframe allow="autoplay; encrypted-media" allowfullscreen="" frameborder="0" height="315" src="https://www.youtube-nocookie.com/embed/Sy0p0YPL98E?rel=0&amp;showinfo=0" width="560"></iframe></div>
+  <div style="height: 100px;">
+  [post_ads]
   </div>
+  <ul>
+  <li>[message]</li>
+  <ul>
+  <li><span style="background-color: #48a7d2; color: white;">##info##&nbsp;DESCRIPTION</span></li>
+  <ul>
+  <li>
+  <b>- TITLE: </b>'.$info['title'].'<br />
+  <b>- TYPE: </b><a href="/search/label/'.$info['type'].'">'.$info['type'].'</a><br />
+  <b>- RATING: </b><a href="/search/label/'.$info['rating'].'">'.$info['rating'].'</a><br />
+  <b>- GENRE: </b>'.$html_lb.'<br />
+  <b>- RESOLUTION: </b><a href="/search?q='.$info['resolution'].'">'.$info['resolution'].'</a><br />
+  <b>- CATEGORY: </b><a href="/search/label/'.$info['category'].'">'.$info['category'].'</a><br />
+  <b>- STEAM: </b><a href="https://steamcommunity.com/sharedfiles/filedetails/?id='.$id.'" target="_blank">https://steamcommunity.com/sharedfiles/filedetails/?id='.$id.'</a><br />
+  <b>- FILE SIZE: </b>'.$info['file_size'].'</li>
+  </ul>
+  </ul>
+  </ul>
+  <br />
+  <ul>
+  <li>[message]</li>
+  <ul>
+  <li><span style="background-color: #4e92df; color: white;">##toggle-on## How To Use This Wallpaper</span></li>
+  <ul>
+  <li>1- Download The Latest and Updated Version Of Wallpaper Engine Software Free <br />
+  2- Download this Wallpaper Engine theme. <br />
+  3- Extract &amp; copy the downloaded file to this destination: <b>[Wallpaper Engine] &gt; Projects &gt; Default projects. </b><br />
+  4- Need help? Read this <a href="/p/how-to-use-wallpaper-engine-on-your.html">Here.</a></li>
+  </ul>
+  </ul>
+  </ul>
+  <div style="height: 100px;">
+  [post_ads_2]
+  </div>
+  <ul>
+  <li>[accordion]</li>
+  <ul>
+  <li>##steam-square## STEAM LINK</li>
+  <ul>
+  <li><a href="https://steamcommunity.com/sharedfiles/filedetails/?id='.$id.'" target="_blank">[##steam-square##&nbsp;STEAM]</a></li>
+  </ul>
+  <li>##download## DOWNLOAD LINK</li>
+  <ul>
+  <li><a href="'.$info['download'].'" target="_blank">[##download## DOWNLOAD]</a></li>
+  </ul>
+  </ul>
+  </ul>
   ';
 
   if (strpos($info['type'], 'Video') !== false) {
     $data_post = array(
-      'title' => $id,
-      'titleLink' => $imgur_data['data']['mp4'],
+      'title' => $info['title'],
       'content' => $content,
       'labels' => $labels
     );
   } else {
     $data_post = array(
-      'title' => $id,
-      'titleLink' => $info['image_default'],
+      'title' => $info['title'],
       'content' => $content,
       'labels' => $labels
     );
@@ -590,31 +603,13 @@ if ($url != 400) {
   </script>';
   flush_all();
 
+// print("<pre>".print_r($data_post,true)."</pre>");
+
   $result_data = post_blog(json_encode($data_post));
-  echo $result_data;
   $result = json_decode($result_data,1);
 
-  $data_update = "{\"title\":\"title\",\"titleLink\":\"https:\\/\\/ani-vn.tech\",\"content\":\"content\",\"labels\":\"labels\"}";
-  $data_update = json_decode($data_update,1);
-  $data_update['title'] = $info['title'];
-  if (strpos($info['type'], 'Video') !== false) {
-  $data_update['titleLink'] = $imgur_data['data']['mp4'];
-} else {
-  $data_update['titleLink'] = $info['image_default'];
-}
-  $data_update['content'] = $content;
-  $data_update['labels'] = $labels;
-
   echo '<script language="javascript">
-  document.getElementById("size").innerHTML="Update to blogger....";
-  </script>';
-  flush_all();
-  $result_update = update_blog(json_encode($data_update),$result["id"]);
-
-  $result_update = json_decode($result_update,1);
-
-  echo '<script language="javascript">
-  document.getElementById("blogger").innerHTML="<a href=\"'.$result_update['url'].'\">'.$result_update['url'].'</a>";
+  document.getElementById("blogger").innerHTML="<a href=\"'.$result['url'].'\">'.$result['url'].'</a>";
   </script>';
   flush_all();
 } else {
