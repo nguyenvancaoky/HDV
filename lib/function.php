@@ -449,6 +449,19 @@ if ($url != 400) {
       $mp4_to_gif = exec('ffmpeg -y -ss 2 -t 3.5 -i "'.$file[0].'" -vf fps=10,scale=640:-1:flags=lanczos,palettegen "'.realpath($directory).'\palette.png"');
       sleep(2);
       $mp4_to_gif = exec('ffmpeg -ss 2 -t 3.5 -i "'.$file[0].'" -i "'.realpath($directory).'\palette.png" -filter_complex "fps=10,scale=640:-1:flags=lanczos[x];[x][1:v]paletteuse" "'.realpath($directory).'\out.gif"');
+      $text = "";
+      $get_video_info = (float) shell_exec('ffprobe -i "'.$file[0].'" -show_entries format=duration -v quiet -of csv="p=0"');
+      $loop_time = 350/$get_video_info;
+      $video_dir_name = pathinfo($file[0], PATHINFO_DIRNAME);
+      $video_extension = pathinfo($file[0], PATHINFO_EXTENSION);
+      if ($loop_time > 2) {
+        for ($i=0; $i < (int) $loop_time; $i++) { 
+          $text .= "file 'upload.".$video_extension."'\n";
+        }
+        file_put_contents(realpath($directory).'\list.txt', $text);
+        file_put_contents(realpath($directory).'\start.bat', 'ffmpeg -f concat -i list.txt -c copy output.mp4');
+        rename($file[0], $video_dir_name.'\upload.'.$video_extension);
+      }
       }
 
       echo '<script language="javascript">
@@ -460,6 +473,10 @@ if ($url != 400) {
       $imgur_data = json_decode($imgur,1);
       echo $imgur_data['data']['link'];
       $info['image_auto'] = $imgur_data['data']['link'];
+      echo '<script language="javascript">
+	  document.getElementById("img").innerHTML=ShowEnlargedImagePreview("'.$info['image_auto'].'");
+	  </script>';
+	  flush_all();
     }
   // $short_link = json_decode(s_link($info['download'],$info['title']),1);
   // $info['download'] = $short_link['link'].'?id='.$id;
@@ -530,7 +547,7 @@ if ($url != 400) {
   <br />
   <br /></div>
   <div class="separator" style="clear: both; text-align: center;">
-  <iframe allow="autoplay; encrypted-media" allowfullscreen="" frameborder="0" height="315" src="https://www.youtube-nocookie.com/embed/Sy0p0YPL98E?rel=0&amp;showinfo=0" width="560"></iframe></div>
+  <iframe allow="autoplay; encrypted-media" allowfullscreen="" frameborder="0" height="315" src="https://www.youtube-nocookie.com/embed/lXop63VPO3w?rel=0&amp;showinfo=0" width="560"></iframe></div>
   <div style="height: 100px;">
   [post_ads]
   </div>
@@ -607,7 +624,7 @@ if ($url != 400) {
 
   $result_data = post_blog(json_encode($data_post));
   $result = json_decode($result_data,1);
-
+  print("<pre>".print_r($result_data,true)."</pre>");
   echo '<script language="javascript">
   document.getElementById("blogger").innerHTML="<a href=\"'.$result['url'].'\">'.$result['url'].'</a>";
   </script>';
@@ -621,9 +638,9 @@ if ($url != 400) {
 
 
   if (strpos($info['type'], 'Video') !== false) {
-  echo '<script language="javascript">
-  document.getElementById("img").innerHTML=ShowEnlargedImagePreview("unzip/'.$id.'/out.gif");
-  </script>';
+  // echo '<script language="javascript">
+  // document.getElementById("img").innerHTML=ShowEnlargedImagePreview("unzip/'.$id.'/out.gif");
+  // </script>';
   flush_all();
   }
 } else {
