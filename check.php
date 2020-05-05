@@ -9,6 +9,6 @@ include './lib/function.php';
 //   echo 0;
 // } else {
 //   echo $data['url'];
-// }
+// } ??
 
 echo 0;
